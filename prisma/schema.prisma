@@ -66,6 +66,7 @@ model MasterEarning {
 
 model CopierToken {
   id             String      @id @default(cuid())
+  label          String?
   userId         String
   CopierToken    String
   accountId      String

@@ -14,11 +14,12 @@ export async function GET(req: Request) {
 
     const copiers = await prisma.copierToken.findMany({
       where: { userId: decoded.uid },
-      include: { master: true },
+      include: { master: true},
     });
 
     const result = copiers.map((c) => ({
       id: c.id,
+      label: c.label,
       token: c.CopierToken,
       masterId: c.masterId,
       masterLabel: c.master.label,
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
     const decoded = await adminAuth.verifyIdToken(idToken);
 
     const body = await req.json();
-    const { copierToken, masterId, stakeType = "PERCENTAGE", stakeAmount = 100 } = body;
+    const { label = "My Copier", copierToken, masterId, stakeType = "PERCENTAGE", stakeAmount = 100 } = body;
     if (!copierToken) return NextResponse.json({ error: "Copier token required" }, { status: 400 });
 
     // Validate copier token via Deriv
@@ -73,6 +74,7 @@ export async function POST(req: Request) {
     const copier = await prisma.copierToken.create({
       data: {
         userId: decoded.uid,
+        label: label,
         CopierToken: copierToken,
         accountId: valid.loginid,
         email: valid.email,

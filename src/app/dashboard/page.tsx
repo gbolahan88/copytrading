@@ -23,6 +23,7 @@ type MasterToken = {
 
 type CopierToken = {
   id: string;
+  label: string;
   token: string;
   accountId: string;
   email: string;
@@ -295,7 +296,7 @@ export default function Dashboard() {
         {copierTokens.length === 0 && <p className="mt-10 mb-20 text-center">No copier tokens registered.</p>}
         {copierTokens.map(c => (
           <div key={c.id} className="text-( --primary) flex flex-col md:flex-row justify-between items-center p-4 border rounded w-full max-w-xl shadow gap-5">
-            <div>{c.email} | {c.accountId} | {c.isActive}</div>
+            <div>{c.label} | {c.email} | {c.accountId} | {c.isActive}</div>
             <button className={`px-4 py-2 rounded text-white ${c.isActive ? "bg-green-600" : "bg-gray-600"}`} onClick={() => toggleCopier(c.id, !c.isActive)}>{c.isActive ? "Stop" : "Start"}</button>
             <button className="px-4 py-2 rounded bg-red-600 text-white" onClick={() => deleteCopier(c.id)}>Delete</button>
           </div>
