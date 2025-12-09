@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id
+  email        String?       @unique
+  createdAt    DateTime      @default(now())
+  copierTokens CopierToken[]
+  masterTokens MasterToken[]
+}
+
+model MasterToken {
+  id          String      @id @default(cuid())
+  userId      String
+  label       String
+  token       String
+  accountType AccountType
+  isActive    Boolean     @default(true)
+  validatedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  accountId   String?
+  balance     Float?
+  currency    String?
+
+  email String?
+  name  String?
+  phone String?
+
+  profit Float? @default(0)
+  equity Float? @default(0)
+  loss   Float? @default(0)
+
+  performanceFee Float @default(20) // default 20%
+  earnings       Float @default(0) // total fee earned
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  copiers        CopierToken[]
+  copiedTrades   CopiedTrade[]
+  masterEarnings MasterEarning[]
+
+  @@index([userId])
+}
+
+model MasterEarning {
+  id             String   @id @default(cuid())
+  masterId       String
+  copierId       String
+  tradeId        String
+  amount         Float // How much master earned from this trade
+  followerProfit Float // How much the follower made
+  percentage     Float // % fee applied
+  createdAt      DateTime @default(now())
+
+  master MasterToken @relation(fields: [masterId], references: [id])
+  copier CopierToken @relation(fields: [copierId], references: [id])
+
+  @@index([masterId])
+}
+
+model CopierToken {
+  id             String      @id @default(cuid())
+  userId         String
+  CopierToken    String
+  accountId      String
+  masterId       String
+  riskMultiplier Float       @default(1.0)
+  accountType    AccountType
+  stakeType      String?     @default("PERCENTAGE")
+  stakeAmount    Float?      @default(10)
+  validatedAt    DateTime?
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  email String?
+  name  String?
+  phone String?
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  master         MasterToken     @relation(fields: [masterId], references: [id])
+  copiedTrades   CopiedTrade[]
+  masterEarnings MasterEarning[]
+
+  @@index([userId])
+}
+
+model CopiedTrade {
+  id               String   @id @default(cuid())
+  masterId         String
+  copierId         String
+  masterTxId       String
+  copierContractId String?
+  status           String // "SUCCESS" | "FAILED"
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+
+  followerProfit Float? // profit follower made
+  masterFee      Float? // fee generated for master
+  processed      Boolean @default(false) // prevents double-charging
+
+  master MasterToken @relation(fields: [masterId], references: [id])
+  copier CopierToken @relation(fields: [copierId], references: [id])
+
+  @@index([masterId])
+  @@index([copierId])
+}
+
+enum AccountType {
+  REAL
+  DEMO
+}
+
+enum StakeType {
+  PERCENTAGE
+  FIXED
+}
